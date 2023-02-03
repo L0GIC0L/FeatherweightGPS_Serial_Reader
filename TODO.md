@@ -13,4 +13,5 @@ These are the objectives that must be accomplished before first release:
 
 ### Done ✓
 
-- [x] Connect to Featherweight over serial  
+- [x] Connect to Featherweight over serial
+- [X] Automate build workflow  

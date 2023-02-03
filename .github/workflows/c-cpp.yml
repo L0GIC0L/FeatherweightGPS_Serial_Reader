@@ -13,9 +13,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Install Boost libraries
+      run: |
+        sudo apt-get update
+        sudo apt-get install libboost-all-dev
+
     - name: Compile code
       run: |
-        g++ src/main.cpp -o main
+        g++ src/main.cpp -o main -lboost_system
 
     - name: Show compiled file
       run: ls -l main

@@ -22,22 +22,26 @@ std::vector<std::string> getSerialPorts() {
 
   return serialPorts;
 }
+
 #elif __linux__
 std::vector<std::string> getSerialPorts() {
   std::vector<std::string> serialPorts;
 
     try {
-  boost::asio::io_service io;
-  boost::asio::serial_port device(io, "/dev/ttyACM0");
+        boost::asio::io_service io;
+        boost::asio::serial_port device(io, "/dev/ttyACM0");
 
-  if (device.is_open()) {
-    serialPorts.push_back("/dev/ttyACM0");
-  }
+        if (device.is_open()) {
+            serialPorts.push_back("/dev/ttyACM0");
+        }
+
     } catch (const std::exception &e) {
     std::cout << "Error: " << e.what() << std::endl;
   }
+
   return serialPorts;
 }
+
 #else
 std::vector<std::string> getSerialPorts() {
   std::vector<std::string> serialPorts;
@@ -54,7 +58,7 @@ int main() {
 
   boost::asio::io_service io;
   boost::asio::serial_port port(io, ports[0]);
-  port.set_option(boost::asio::serial_port_base::baud_rate(9600));
+  port.set_option(boost::asio::serial_port_base::baud_rate(115200));
 
   try {
     for (;;) {

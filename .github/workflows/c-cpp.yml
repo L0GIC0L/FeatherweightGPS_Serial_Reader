@@ -15,7 +15,7 @@ jobs:
 
     - name: Compile code
       run: |
-        g++ main.cpp -o main
+        g++ src/main.cpp -o main
 
     - name: Show compiled file
       run: ls -l main

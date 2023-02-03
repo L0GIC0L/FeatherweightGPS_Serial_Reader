@@ -13,7 +13,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Cache Boost libraries
+      id: boost
+      uses: actions/cache@v2
+      with:
+        path: /usr/include/boost
+        key: boost-${{ hashFiles('**/boost/version.hpp') }}
+
     - name: Install Boost libraries
+      if: steps.boost.outputs.cache-hit != 'true'
       run: |
         sudo apt-get update
         sudo apt-get install libboost-all-dev

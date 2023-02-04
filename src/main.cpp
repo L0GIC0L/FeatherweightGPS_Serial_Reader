@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <cstring>
 #include <boost/asio.hpp>
-#include <boost/algorithm/string.hpp>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -29,10 +29,10 @@ std::vector<std::string> getSerialPorts() {
 
     try {
         boost::asio::io_service io;
-        boost::asio::serial_port device(io, "/dev/ttyACM0");
+        boost::asio::serial_port device(io, "/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_D201170B-if00-port0");
 
         if (device.is_open()) {
-            serialPorts.push_back("/dev/ttyACM0");
+            serialPorts.push_back("/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_D201170B-if00-port0");
         }
 
     } catch (const std::exception &e) {
@@ -58,17 +58,22 @@ int main() {
 
   boost::asio::io_service io;
   boost::asio::serial_port port(io, ports[0]);
+
+  // Set the baud rate, data bits, and stop bits
   port.set_option(boost::asio::serial_port_base::baud_rate(115200));
+  port.set_option(boost::asio::serial_port_base::stop_bits(boost::asio::serial_port_base::stop_bits::one));
+  port.set_option(boost::asio::serial_port_base::parity(boost::asio::serial_port_base::parity::none));
+
 
   try {
     for (;;) {
-      boost::asio::streambuf buf;
-      boost::asio::read_until(port, buf, '\n');
+      char c = 0;
+      boost::asio::read(port, boost::asio::buffer(&c, 1));
 
-      std::string line;
-      std::istream(&buf) >> line;
-
-      std::cout << line << std::endl;
+      std::cout << c;
+      if (c == '\n') {
+        std::cout << std::endl;
+      }
     }
   } catch (const std::exception &e) {
     std::cout << "Error: " << e.what() << std::endl;

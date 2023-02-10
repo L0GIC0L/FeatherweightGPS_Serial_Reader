@@ -1,136 +1,153 @@
-#include "lib/serialib.h"
 #include <iostream>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <vector>
+#include <cstring>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#include <fcntl.h>
+#include <termios.h>
+#endif
 
-bool
-ifolder (const char *folder)
-{
-  // folder = "C:\\Users\\SaMaN\\Desktop\\Ppln";
-  struct stat sb;
-
-  if (stat (folder, &sb) == 0 && S_ISDIR (sb.st_mode))
-    {
-      return true;
-    }
-  else
-    {
-      return false;
-    }
-}
+using namespace std;
 
 #ifdef _WIN32
-#include <tchar.h>
-#include <windows.h>
+HANDLE hSerial;
+#else
+int serialPort;
+#endif
 
-std::vector<std::string>
-getSerialPorts ()
+bool openSerialPort(string portName)
 {
-  std::vector<std::string> serialPorts;
-
-  TCHAR lpTargetPath[5000];
-  DWORD test = QueryDosDevice (NULL, lpTargetPath, 5000);
-  if (test != 0)
+#ifdef _WIN32
+    hSerial = CreateFile(portName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL,
+        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hSerial == INVALID_HANDLE_VALUE)
     {
-      for (TCHAR *p = lpTargetPath; *p; p += _tcslen (p) + 1)
+        cerr << "Error opening serial port" << endl;
+        return false;
+    }
+
+    DCB dcbSerialParams = { 0 };
+    dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
+    if (!GetCommState(hSerial, &dcbSerialParams))
+    {
+        cerr << "Error getting serial port state" << endl;
+        return false;
+    }
+
+    dcbSerialParams.BaudRate = CBR_115200;
+    dcbSerialParams.ByteSize = 8;
+    dcbSerialParams.StopBits = ONESTOPBIT;
+    dcbSerialParams.Parity = NOPARITY;
+    if (!SetCommState(hSerial, &dcbSerialParams))
+    {
+        cerr << "Error setting serial port state" << endl;
+        return false;
+    }
+
+    COMMTIMEOUTS timeouts = { 0 };
+    timeouts.ReadIntervalTimeout = 50;
+    timeouts.ReadTotalTimeoutConstant = 50;
+    timeouts.ReadTotalTimeoutMultiplier = 10;
+    if (!SetCommTimeouts(hSerial, &timeouts))
+    {
+        cerr << "Error setting serial port timeouts" << endl;
+        return false;
+    }
+#else
+
+
+    serialPort = open(portName.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+    if (serialPort == -1)
+    {
+        cerr << "Error opening serial port" << endl;
+        return false;
+    }
+
+    struct termios tty;
+    memset(&tty, 0, sizeof tty);
+    if (tcgetattr(serialPort, &tty) != 0)
+    {
+        cerr << "Error getting serial port attributes" << endl;
+        return false;
+    }
+
+    cfsetospeed(&tty, B115200);
+    cfsetispeed(&tty, B115200);
+
+    tty.c_cflag &= ~PARENB;
+    tty.c_cflag &= ~CSTOPB;
+    tty.c_cflag &= ~CSIZE;
+    tty.c_cflag |= CS8;
+
+    tty.c_cflag &= ~CRTSCTS;
+    tty.c_cc[VMIN] = 1;
+    tty.c_cc[VTIME] = 5;
+        tty.c_cflag |= CREAD | CLOCAL;
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY);
+    tty.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+    tty.c_oflag &= ~OPOST;
+
+    if (tcsetattr(serialPort, TCSANOW, &tty) != 0)
+    {
+        cerr << "Error setting serial port attributes" << endl;
+        return false;
+    }
+#endif
+    return true;
+}
+
+void closeSerialPort()
+{
+#ifdef _WIN32
+    CloseHandle(hSerial);
+#else
+    close(serialPort);
+#endif
+}
+
+int main(int argc, char* argv[])
+{
+    // if (argc < 2)
+    // {
+    //     cerr << "Usage: serialport_example <serial port name>" << endl;
+    //     return 1;
+    // }
+
+    if (!openSerialPort("/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_85734323430351B0C0A2-if00"))
+    {
+        return 1;
+    }
+
+#ifdef _WIN32
+    char incomingData[256] = "";
+    DWORD bytesRead;
+    while (true)
+    {
+        if (ReadFile(hSerial, incomingData, 255, &bytesRead, NULL))
         {
-          if (_tcsstr (p, _T("COM")) != NULL)
-            {
-              serialPorts.push_back (std::string (p));
+            cout << incomingData;
+        }
+    }
+
+#else
+    char incomingData[1] = "";
+    int bytesRead;
+    string line = "";
+    while (incomingData[0] != '\n')
+    {
+        bytesRead = read(serialPort, incomingData, 1);
+        if (bytesRead > 0)
+        {
+            if (incomingData[0] != '\n') {
+                line += incomingData[0];
             }
         }
     }
-
-  return serialPorts;
-}
-
-#elif __linux__
-std::vector<std::string>
-getSerialPorts ()
-{
-  std::vector<std::string> serialPorts;
-
-  if (ifolder (
-          "/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_D201170B-if00-port0")
-      == false)
-    {
-      return serialPorts;
-    }
-  else
-    {
-      serialPorts.push_back (
-          "/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_D201170B-if00-port0");
-      return serialPorts;
-    }
-}
-
-#else
-std::vector<std::string>
-getSerialPorts ()
-{
-  std::vector<std::string> serialPorts;
-  return serialPorts;
-}
+    cout << "Behold the completed line: " << line << endl;
 #endif
-
-int
-main ()
-{
-  std::vector<std::string> serial_ports = getSerialPorts ();
-
-  if (serial_ports.empty ())
-    {
-      std::cout << "No serial ports found." << std::endl;
-      return 0;
-    }
-  else
-    {
-      std::cout << "Port found! Connecting to: " << serial_ports[0].c_str ()
-                << std::endl;
-    }
-
-  const char *primary_port = serial_ports[0].c_str ();
-
-  serialib serial;
-  serial.openDevice (primary_port, 115200, SERIAL_DATABITS_8,
-                     SERIAL_PARITY_NONE, SERIAL_STOPBITS_1);
-
-  std::string data;
-  // std::map<std::string, std::string> gpsData;
-
-  for (;;)
-    {
-      char c = 0;
-      data = "";
-
-      do
-        {
-          serial.readString (&c, '\n', 1024, 0);
-          data += c;
-        }
-      while (c != '\n');
-
-      std::cout << data;
-      std::cout << "The string length is: " << data.length () << std::endl;
-      std::cout << std::endl;
-
-      // Basic code to break up the variables and store them in a map
-      //    std::istringstream iss(data);
-      //    std::string key, value;
-
-      // Extract the first word "BATT_BLE" and discard it
-      //   iss >> key;
-
-      //  int i = 0;
-      //  while (iss >> value) {
-      // Store each variable after "BATT_BLE" in the map with a key starting
-      // from 0
-      //  gpsData[std::to_string(i++)] = value;
-      //  }
-      //    for (int j = 0; j < i; j++) {
-      //      std::cout << gpsData[std::to_string(j)] << std::endl;
-      //    }
-    }
-  return 0;
+    closeSerialPort();
+    return 0;
 }
+
+

@@ -15,7 +15,7 @@ jobs:
 
     - name: Compile code
       run: |
-        g++ src/main.cpp src/lib/serialib.cpp -o main
+        g++ src/main.cpp -o main
 
     - name: Show compiled file
       run: ls -l main

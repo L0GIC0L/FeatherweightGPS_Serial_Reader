@@ -1,5 +1,5 @@
 featherweightgps_serial_reader_sources = [
-  'main.cpp','lib/serialib.cpp'
+  'main.cpp'
 ]
 
 featherweightgps_serial_reader_deps = [

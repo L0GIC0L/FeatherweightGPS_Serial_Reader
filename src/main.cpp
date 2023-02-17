@@ -2,6 +2,33 @@
 #include <cstring>
 #include "serial.h"
 
+string readLine(char incomingData[1], int &bytesRead) {
+   string line = "";
+    if(incomingData[0] != '\n') {
+        do {
+            #ifdef _WIN32
+            if (ReadFile(hSerial, incomingData, 1, &bytesRead, NULL))
+            {
+                if ((incomingData[0] != '\n') && (incomingData[0] != '@')
+                {
+                    line += incomingData;
+                }
+            }
+            #else
+
+            bytesRead = read(serialPort, incomingData, 1);
+            if (bytesRead > 0)
+            {
+                if((incomingData[0] != '\n') && (incomingData[0] != '@')) {
+                    line += incomingData;
+               }
+            }
+            #endif
+        } while (incomingData[0] != '@');
+    }
+    return line;
+}
+
 int main(int argc, char* argv[])
 {
     ////Normally this can be used to assign a port when launching the program
@@ -11,42 +38,30 @@ int main(int argc, char* argv[])
     //     return 1;
     // }
 
-    //Change this line to configure the port
-    if (!openSerialPort("COM3"))
+    //Change this line to "argv" configure the port
+    if (!openSerialPort("/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_85734323430351B0C0A2-if00"))
     {
         return 1;
     }
 
-#ifdef _WIN32
-    char incomingData[1] = "";
     string line = "";
-    DWORD bytesRead;
-    while (incomingData[0] != '\n')
-    {
-        if (ReadFile(hSerial, incomingData, 1, &bytesRead, NULL))
-        {
-            line += incomingData[0];
-        }
-
-    }
-    cout << "Behold the completed line: " << line << endl;
-
-#else
-    char incomingData[1] = "";
     int bytesRead;
-    string line = "";
-    while (incomingData[0] != '\n')
-    {
-        bytesRead = read(serialPort, incomingData, 1);
-        if (bytesRead > 0)
-        {
-            if (incomingData[0] != '\n') {
-                line += incomingData[0];
-            }
+    char incomingData[1] = "";
+    bool lineGPS = false;
+
+    while(lineGPS == false) {
+        line = readLine(incomingData,bytesRead);
+        cout << "IT WORKS";
+        if (line.rfind("GPS") == 0) {
+            cout << "Line found!!! dalfkasjdflk wow wowoww wowo" << endl << endl;
+            lineGPS = true;
         }
-    }
+
+
     cout << "Behold the completed line: " << line << endl;
-#endif
+    sleep(1);
+    }
+
     closeSerialPort();
     return 0;
 }

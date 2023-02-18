@@ -1,14 +1,14 @@
-#include <iostream>
-#include <cstring>
-
 #ifdef _WIN32
 #include <windows.h>
-
+#include <string>
 #else
 #include <unistd.h>
 #include <fcntl.h>
 #include <termios.h>
 #endif
+
+#include <iostream>
+#include <cstring>
 
 using namespace std;
 
@@ -18,48 +18,38 @@ HANDLE hSerial;
 int serialPort;
 #endif
 
-bool openSerialPort(string portName)
-{
+bool openSerialPort(std::string port) {
 #ifdef _WIN32
-    hSerial = CreateFile(portName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL,
-        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hSerial == INVALID_HANDLE_VALUE)
-    {
-        cerr << "Error opening serial port" << endl;
-        return false;
-    }
-
     DCB dcbSerialParams = { 0 };
-    dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
-    if (!GetCommState(hSerial, &dcbSerialParams))
-    {
-        cerr << "Error getting serial port state" << endl;
-        return false;
+
+    // Disable buffer synchronization for cout
+    ios_base::sync_with_stdio(false);
+
+    char const *dave = port.data();
+    // Open the serial port
+    hSerial = CreateFileA(dave, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hSerial == INVALID_HANDLE_VALUE) {
+        cout << "Error opening serial port" << endl;
+        return 1;
     }
 
+    // Set the parameters for the serial communication
+    dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
+    if (!GetCommState(hSerial, &dcbSerialParams)) {
+        cout << "Error getting the serial port state" << endl;
+        return 1;
+    }
     dcbSerialParams.BaudRate = CBR_115200;
     dcbSerialParams.ByteSize = 8;
     dcbSerialParams.StopBits = ONESTOPBIT;
     dcbSerialParams.Parity = NOPARITY;
-    if (!SetCommState(hSerial, &dcbSerialParams))
-    {
-        cerr << "Error setting serial port state" << endl;
-        return false;
-    }
-
-    COMMTIMEOUTS timeouts = { 0 };
-    timeouts.ReadIntervalTimeout = 50;
-    timeouts.ReadTotalTimeoutConstant = 50;
-    timeouts.ReadTotalTimeoutMultiplier = 10;
-    if (!SetCommTimeouts(hSerial, &timeouts))
-    {
-        cerr << "Error setting serial port timeouts" << endl;
-        return false;
+    if (!SetCommState(hSerial, &dcbSerialParams)) {
+        cout << "Error setting serial port state" << endl;
+        return 1;
     }
 #else
-
-
-    serialPort = open(portName.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+    serialPort = open(port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (serialPort == -1)
     {
         cerr << "Error opening serial port" << endl;
@@ -105,5 +95,64 @@ void closeSerialPort()
     CloseHandle(hSerial);
 #else
     close(serialPort);
+#endif
+}
+
+string readSerialPort(string param)
+{
+#ifdef _WIN32
+    DWORD dwBytesRead = 0;
+    char incomingChar = '\0';
+    string line;
+    string buffer;
+
+     dwBytesRead = 0;
+     while (true) {
+        if (!ReadFile(hSerial, &incomingChar, 1, &dwBytesRead, NULL)) {
+            cout << "Error reading from the serial port" << endl;
+            exit;
+        }
+        if (dwBytesRead == 0) {
+            // No data received, try again
+            continue;
+        }
+        if (incomingChar == '\n') {
+            line += incomingChar;
+            if (line.find(param) != string::npos) {
+                buffer += line;
+                buffer += '\n';
+            }
+            line.clear();
+        }
+        else {
+            line += incomingChar;
+        }
+        if (!buffer.empty() && buffer.back() == '\n') {
+            return buffer;
+            buffer.clear();
+        }
+    }
+#else
+    char incomingChar[1] = "";
+    int bytesRead;
+    string buffer;
+    string line;
+
+    while (incomingChar[0] != '\n')
+    {
+        bytesRead = read(serialPort, incomingChar, 1);
+        if (bytesRead > 0)
+        {
+            if (incomingChar[0] != '\n') {
+                line += incomingChar[0];
+            }
+        }
+    }
+
+    if (line.find(param) != string::npos) {
+              buffer += line;
+     }
+
+return buffer;
 #endif
 }

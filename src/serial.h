@@ -150,9 +150,16 @@ string readSerialPort(string param)
     }
 
     if (line.find(param) != string::npos) {
-              buffer += line;
-     }
+      buffer += line + "\n";
+    } else {
+      buffer = "0";
+    }
 
-return buffer;
+  if (buffer == "0") {
+    buffer = "";
+    return buffer;
+  } else {
+    return buffer;
+  }
 #endif
 }

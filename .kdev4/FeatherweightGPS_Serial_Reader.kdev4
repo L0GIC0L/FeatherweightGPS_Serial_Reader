@@ -1,0 +1,20 @@
+[Buildset]
+BuildItems=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x01\x00\x00\x00<\x00F\x00e\x00a\x00t\x00h\x00e\x00r\x00w\x00e\x00i\x00g\x00h\x00t\x00G\x00P\x00S\x00_\x00S\x00e\x00r\x00i\x00a\x00l\x00_\x00R\x00e\x00a\x00d\x00e\x00r)
+
+[Cppcheck]
+checkPerformance=true
+checkPortability=true
+checkStyle=true
+
+[MesonManager]
+Current Build Directory Index=0
+Number of Build Directories=1
+
+[MesonManager][BuildDir 0]
+Additional meson arguments=
+Build Directory Path=/home/nmiller/Projects/GUI1.1/FeatherweightGPS_Serial_Reader/build
+Meson Generator Backend=ninja
+Meson executable=/usr/bin/meson
+
+[Project]
+VersionControlSupport=kdevgit

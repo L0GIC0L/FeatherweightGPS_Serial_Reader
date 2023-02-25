@@ -1,4 +1,4 @@
-// dear imgui, v1.89.3 WIP
+// dear imgui, v1.89.4 WIP
 // (tables and columns code)
 
 /*
@@ -366,9 +366,7 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
         IM_ASSERT(table->ColumnsCount == columns_count && "BeginTable(): Cannot change columns count mid-frame while preserving same ID");
         if (table->InstanceDataExtra.Size < instance_no)
             table->InstanceDataExtra.push_back(ImGuiTableInstanceData());
-        char instance_desc[12];
-        int instance_desc_len = ImFormatString(instance_desc, IM_ARRAYSIZE(instance_desc), "##Instance%d", instance_no);
-        instance_id = GetIDWithSeed(instance_desc, instance_desc + instance_desc_len, id);
+        instance_id = GetIDWithSeed(instance_no, GetIDWithSeed("##Instances", NULL, id)); // Push "##Instance" followed by (int)instance_no in ID stack.
     }
     else
     {
@@ -1146,12 +1144,12 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
         EndPopup();
     }
 
-    // [Part 13] Sanitize and build sort specs before we have a change to use them for display.
+    // [Part 12] Sanitize and build sort specs before we have a change to use them for display.
     // This path will only be exercised when sort specs are modified before header rows (e.g. init or visibility change)
     if (table->IsSortSpecsDirty && (table->Flags & ImGuiTableFlags_Sortable))
         TableSortSpecsBuild(table);
 
-    // [Part 14] Setup inner window decoration size (for scrolling / nav tracking to properly take account of frozen rows/columns)
+    // [Part 13] Setup inner window decoration size (for scrolling / nav tracking to properly take account of frozen rows/columns)
     if (table->FreezeColumnsRequest > 0)
         table->InnerWindow->DecoInnerSizeX1 = table->Columns[table->DisplayOrderToIndex[table->FreezeColumnsRequest - 1]].MaxX - table->OuterRect.Min.x;
     if (table->FreezeRowsRequest > 0)

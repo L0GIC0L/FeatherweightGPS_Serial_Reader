@@ -1,52 +1,53 @@
-#include <iostream>
-#include <cstring>
-#include "serial.h"
-
-int main(int argc, char* argv[])
-{
-    ////Normally this can be used to assign a port when launching the program
-    // if (argc < 2)
-    // {
-    //     cerr << "Usage: serialport_example <serial port name>" << endl;
-    //     return 1;
-    // }
-
-    //Change this line to configure the port
-    if (!openSerialPort("COM3"))
-    {
-        return 1;
-    }
-
 #ifdef _WIN32
-    char incomingData[1] = "";
-    string line = "";
-    DWORD bytesRead;
-    while (incomingData[0] != '\n')
-    {
-        if (ReadFile(hSerial, incomingData, 1, &bytesRead, NULL))
-        {
-            line += incomingData[0];
-        }
 
-    }
-    cout << "Behold the completed line: " << line << endl;
+#include <windows.h>
 
-#else
-    char incomingData[1] = "";
-    int bytesRead;
-    string line = "";
-    while (incomingData[0] != '\n')
-    {
-        bytesRead = read(serialPort, incomingData, 1);
-        if (bytesRead > 0)
-        {
-            if (incomingData[0] != '\n') {
-                line += incomingData[0];
-            }
-        }
-    }
-    cout << "Behold the completed line: " << line << endl;
 #endif
-    closeSerialPort();
-    return 0;
+
+#include <map>
+
+#include <regex>
+
+#include <sstream>
+
+#include <iostream>
+
+#include <fstream>
+
+#include <string>
+
+
+#include "Functions.h"
+
+int main() {
+  //Set the port directory (typically COM3 on windows)
+  //string port = "/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_D201170B-if00-port0";
+  string port = "/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_85734323430351B0C0A2-if00";
+
+  // Map to store the parsed data
+  std::multimap < std::string, std::string > parsed_data;
+
+  //Set safe file directory
+  std::string dir = R"(/home/nmiller/Projects/Brand New/FeatherweightGPS_Serial_Reader/src/)";
+
+  //Open the save file
+  std::ofstream csv_file(dir + "data.csv");
+
+  //Initialize input buffer
+  std::string line = "";
+
+   openSerialPort(port);
+
+  //Read and List Data
+  while (true) {
+    line = readSerialPort("GPS_STAT");
+    parseData(parsed_data, line);
+    //saveFile(parsed_data, csv_file);
+    cout << retrieveLatest(parsed_data, R"(Seconds)") << endl;
+  }
+
+  return 0;
 }
+
+
+

@@ -54,8 +54,8 @@ void read_and_parse()
 
 int main ( int argc, char const *argv[] )
 {
-  if ( openSerialPort ( port ) )
-    {
+  //if ( openSerialPort ( port ) )
+    //{
       // Initialize GLFW and create a window
       glfwInit();
       GLFWwindow* window = glfwCreateWindow ( 1280, 720, "ImGui Window", NULL, NULL );
@@ -125,6 +125,6 @@ int main ( int argc, char const *argv[] )
       glfwDestroyWindow ( window );
       glfwTerminate();
       return 0;
-    }
+    //}
 }
 

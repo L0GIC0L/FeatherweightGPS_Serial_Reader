@@ -6,23 +6,16 @@
 
 #include <map>
 
-#include <regex>
-
-#include <sstream>
-
 #include <iostream>
-
-#include <fstream>
 
 #include <string>
 
-
-#include "Functions.h"
+#include "functions.h"
 
 int main() {
   //Set the port directory (typically COM3 on windows)
   //string port = "/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_D201170B-if00-port0";
-  string port = "/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_85734323430351B0C0A2-if00";
+  std::string port = "/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_85734323430351B0C0A2-if00";
 
   // Map to store the parsed data
   std::multimap < std::string, std::string > parsed_data;
@@ -43,7 +36,7 @@ int main() {
     line = readSerialPort("GPS_STAT");
     parseData(parsed_data, line);
     //saveFile(parsed_data, csv_file);
-    cout << retrieveLatest(parsed_data, R"(Seconds)") << endl;
+    std::cout << retrieveLatest(parsed_data, R"(Seconds)") << std::endl;
   }
 
   return 0;

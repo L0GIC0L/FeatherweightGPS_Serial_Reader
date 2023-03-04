@@ -4,24 +4,32 @@ These are the objectives that must be accomplished before first release:
 
 ### Todo
 
-- [ ] Implement the native serial libraries instead of boost libraries.
-  - [ ] Fundamental research.
-
-- [ ] Implement a cmake file for easier cross-platform compilation.
-
-- [ ] Interface and display data on a GUI interface (iMgui?)
-  - [X] Fundamental understanding of iMgui established.  
+- [ ] Research Imgui tiling and a backround window transparency
+- [ ] Create a dedicated window to reconnect to GPS, set COM port, and set the log file location.
+- [ ] Create a window to display the latest data in text form.
+- [ ] Add theming.
 
 ### In Progress
 
-- [ ] Sort and break up the recieved string.
-  - [X] Serial connection established.
-  - [X] Data is saved into a string.
-  - [ ] Data is stored in a "map" or some other equivalent.
-  - [ ] Store these function into a separate file for easy use in the GUI program. 
- - [ ] Store parsed string data in auto-saving log file.  
+- [ ] Create plots that properly display velocity and altitude.
+- [ ] Create a plot to overlay over the map that displays GPS longitude and latitude.
 
 ### Done ✓
 
 - [x] Connect to Featherweight over serial
 - [X] Automate build workflow for Linux
+
+- [X] Implement the native serial libraries instead of boost libraries.
+  - [X] Fundamental research.
+
+- [X] Implement a cmake file for easier cross-platform compilation.
+
+- [X] Interface and display data on a GUI interface (iMgui?)
+  - [X] Fundamental understanding of iMgui established.  
+
+- [X] Sort and break up the recieved string.
+  - [X] Serial connection established.
+  - [X] Data is saved into a string.
+  - [X] Data is stored in a "map" or some other equivalent.
+  - [X] Store these function into a separate file for easy use in the GUI program.
+- [X] Store parsed string data in auto-saving log file.  

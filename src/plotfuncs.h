@@ -314,7 +314,7 @@ private:
         m_workers.emplace_back (
           [this, thrd]
         {
-          printf ( "TileManager[%02d]: Thread started\n",thrd );
+          //printf ( "TileManager[%02d]: Thread started\n",thrd );
           CURL* curl = curl_easy_init();
           curl_easy_setopt ( curl, CURLOPT_WRITEFUNCTION, curl_write_cb );
           curl_easy_setopt ( curl, CURLOPT_FOLLOWLOCATION, 1 );
@@ -329,7 +329,7 @@ private:
                 if ( m_stop && m_queue.empty() )
                   {
                     curl_easy_cleanup ( curl );
-                    printf ( "TileManager[%02d]: Thread terminated\n",thrd );
+                    //printf ( "TileManager[%02d]: Thread terminated\n",thrd );
                     return;
                   }
                 coord = std::move ( m_queue.front() );
@@ -522,24 +522,26 @@ void Demo_Map ( TileManager& mngr )
 
 }
 
-void Demo_RealtimePlots ( double rs, double vx, double vy, double vz )
+void livePlot ( double vx, double vy, double vz, const char* name1, const char* name2, const char* name3)
 {
-  ImGui::BulletText ( "Move your mouse to change the data!" );
   ImGui::BulletText ( "This is the Altitude Data" );
-  static ScrollingBuffer sdata1, sdata2;
-  static RollingBuffer   rdata1, rdata2;
-  ImVec2 mouse = ImGui::GetMousePos();
+  static ScrollingBuffer vxdata1, vydata1, vzdata1;
+  static RollingBuffer   vxdata2, vydata2, vzdata2;
   static float t = 0;
   t += ImGui::GetIO().DeltaTime;
-  sdata1.AddPoint ( t, rs * 0.01f );
-  rdata1.AddPoint ( t, vy * 0.01f );
-  sdata2.AddPoint ( t, rs * 0.01f );
-  rdata2.AddPoint ( t, vy * 0.01f );
+  vxdata1.AddPoint ( t, vx * 0.01f );
+  vydata1.AddPoint ( t, vy * 0.01f );
+  vzdata1.AddPoint ( t, vz * 0.01f );
+
+  vxdata2.AddPoint ( t, vx * 0.01f );
+  vydata2.AddPoint ( t, vy * 0.01f );
+  vzdata2.AddPoint ( t, vz * 0.01f );
 
   static float history = 10.0f;
-  ImGui::SliderFloat ( "History",&history,1,30,"%.1f s" );
-  rdata1.Span = history;
-  rdata2.Span = history;
+  ImGui::SliderFloat ( "History",&history,1,120,"%.1f s" );
+  vxdata2.Span = history;
+  vydata2.Span = history;
+  vzdata2.Span = history;
 
 
   if ( ImPlot::BeginPlot ( "##Scrolling", ImVec2 ( -1,150 ) ) )
@@ -548,8 +550,9 @@ void Demo_RealtimePlots ( double rs, double vx, double vy, double vz )
       ImPlot::SetupAxisLimits ( ImAxis_X1,t - history, t, ImGuiCond_Always );
       ImPlot::SetupAxisLimits ( ImAxis_Y1,0,1 );
       ImPlot::SetNextFillStyle ( IMPLOT_AUTO_COL,0.5f );
-      ImPlot::PlotShaded ( "Mouse X", &sdata1.Data[0].x, &sdata1.Data[0].y, sdata1.Data.size(), -INFINITY, 0, sdata1.Offset, 2 * sizeof ( float ) );
-      ImPlot::PlotLine ( "Mouse Y", &sdata2.Data[0].x, &sdata2.Data[0].y, sdata2.Data.size(), 0, sdata2.Offset, 2*sizeof ( float ) );
+      ImPlot::PlotLine ( name1, &vxdata1.Data[0].x, &vxdata1.Data[0].y, vxdata1.Data.size(), 0, vxdata1.Offset, 2 * sizeof ( float ) );
+      ImPlot::PlotLine ( name2, &vydata1.Data[0].x, &vydata1.Data[0].y, vydata1.Data.size(), 0, vydata1.Offset, 2*sizeof ( float ) );
+      ImPlot::PlotLine ( name3, &vzdata1.Data[0].x, &vzdata1.Data[0].y, vzdata1.Data.size(), 0, vzdata1.Offset, 2*sizeof ( float ) );
       ImPlot::EndPlot();
     }
   if ( ImPlot::BeginPlot ( "##Rolling", ImVec2 ( -1,150 ) ) )
@@ -557,8 +560,9 @@ void Demo_RealtimePlots ( double rs, double vx, double vy, double vz )
       ImPlot::SetupAxes ( NULL, NULL, NULL, NULL );
       ImPlot::SetupAxisLimits ( ImAxis_X1,0,history, ImGuiCond_Always );
       ImPlot::SetupAxisLimits ( ImAxis_Y1,0,1 );
-      ImPlot::PlotLine ( "Mouse X", &rdata1.Data[0].x, &rdata1.Data[0].y, rdata1.Data.size(), 0, 0, 2 * sizeof ( float ) );
-      ImPlot::PlotLine ( "Mouse Y", &rdata2.Data[0].x, &rdata2.Data[0].y, rdata2.Data.size(), 0, 0, 2 * sizeof ( float ) );
+      ImPlot::PlotLine ( name1, &vxdata2.Data[0].x, &vxdata2.Data[0].y, vxdata2.Data.size(), 0, 0, 2 * sizeof ( float ) );
+      ImPlot::PlotLine ( name2, &vydata2.Data[0].x, &vydata2.Data[0].y, vydata2.Data.size(), 0, 0, 2 * sizeof ( float ) );
+      ImPlot::PlotLine ( name3, &vzdata2.Data[0].x, &vzdata2.Data[0].y, vzdata2.Data.size(), 0, 0, 2 * sizeof ( float ) );
       ImPlot::EndPlot();
     }
 }

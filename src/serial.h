@@ -75,7 +75,7 @@ bool openSerialPort(std::string port) {
     tty.c_cflag &= ~CRTSCTS;
     tty.c_cc[VMIN] = 1;
     tty.c_cc[VTIME] = 5;
-        tty.c_cflag |= CREAD | CLOCAL;
+    tty.c_cflag |= CREAD | CLOCAL;
     tty.c_iflag &= ~(IXON | IXOFF | IXANY);
     tty.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
     tty.c_oflag &= ~OPOST;
@@ -150,16 +150,16 @@ string readSerialPort(string param)
     }
 
     if (line.find(param) != string::npos) {
-      buffer += line + "\n";
+        buffer += line + "\n";
     } else {
-      buffer = "0";
+        buffer = "0";
     }
 
-  if (buffer == "0") {
-    buffer = "";
-    return buffer;
-  } else {
-    return buffer;
-  }
+    if (buffer == "0") {
+        buffer = "";
+        return buffer;
+    } else {
+        return buffer;
+    }
 #endif
 }

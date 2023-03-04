@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(featherweightgps_serial_reader)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 set(CMAKE_CXX_STANDARD 20)
 
 set(OpenGL_GL_PREFERENCE "GLVND")
@@ -30,6 +28,6 @@ target_include_directories(featherweightgps_serial_reader PUBLIC
 )
 
 target_link_libraries(featherweightgps_serial_reader
-        glfw curl GLEW::glew GL
+        glfw curl GLEW::glew
 )
 

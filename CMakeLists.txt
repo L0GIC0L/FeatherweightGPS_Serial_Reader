@@ -28,6 +28,6 @@ target_include_directories(featherweightgps_serial_reader PUBLIC
 )
 
 target_link_libraries(featherweightgps_serial_reader
-        glfw curl GLEW::glew
+        glfw curl GLEW::glew GL
 )
 

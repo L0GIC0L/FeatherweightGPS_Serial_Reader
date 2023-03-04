@@ -3,7 +3,7 @@ name: Compile C++ code
 on:
   push:
     branches:
-      - main
+      - gui
 
 jobs:
   build:

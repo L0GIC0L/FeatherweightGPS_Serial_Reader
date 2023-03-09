@@ -3,7 +3,7 @@
 - **To build on Windows:**
   - Install MSYS2
   - Open MSYS2
-    - Run: `pacman -S mingw-w64-x86_64-toolchain mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-glew curl libcurl`
+    - Run: `pacman -S mingw-w64-x86_64-toolchain mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-glew mingw-w64-x86_64-curl curl libcurl`
   - In your compiler, set the toolchain to use mingw-w64 system install.
   - Compile.
 - **To build on Linux:**

@@ -131,17 +131,15 @@ int main ( int argc, char const *argv[] )
       // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
       io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
       //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+      ImGui::GetStyle().AntiAliasedLines = true;
+      ImGui::GetStyle().AntiAliasedFill = true;
       ImGui::StyleColorsLight();
-
-
 
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
     ImGuiStyle& style = ImGui::GetStyle();
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    {
-        style.WindowRounding = 1.0f;
-        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-    }
+
+    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    style.WindowRounding = 5.0f; // Set the window rounding radius to 5.
 
       // Setup ImGui GLFW backend
       ImGui_ImplGlfw_InitForOpenGL ( window, true );
@@ -159,52 +157,68 @@ int main ( int argc, char const *argv[] )
           ImGui_ImplGlfw_NewFrame();
           ImGui::NewFrame();
 
-          // Create a basic ImGui window
-          ImGui::Begin ( "Velocity" );
+            ImGui::SetNextWindowPos(ImVec2(0, 0)); // Set the window position to (0, 0)
+            ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize); // Set the window size to the display size
+
+            ImGui::Begin("Main Window", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoBackground);
+
+            ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+            if (ImGui::BeginMenuBar()) {
+                // Menu bar contents here
+                ImGui::EndMenuBar();
+            }
+
+            // Create the dock space
+            ImGui::DockSpace(ImGui::GetID("Dockspace"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+
+            // Window contents here
+            ImGui::Begin ( "Velocity" );
           livePlot ( read_vel_x.load(), read_vel_y.load(), read_vel_z.load(), "Velocity X","Velocity Y","Velocity Z" );
           ImGui::End();
 
           ImGui::Begin ( "Altitude" );
           livePlot ( read_altitude.load(), NULL, NULL,"Altitude","","");
-            ImGui::Text("Altitude: %.0f", read_altitude.load());
+          ImGui::Text("Altitude: %.0f", read_altitude.load());
           ImGui::End();
 
           ImGui::Begin ( "Map",0 );
           TileManager mngr;
-          Demo_Map ( mngr );
+          //Demo_Map ( mngr, ((read_latitude.load()+90)/360), ((read_longitude.load()+180)/360) );
+          Demo_Map ( mngr, ((37.35242+90)/360), ((-79.18018+180)/360) );
           ImGui::End();
 
           ImGui::Begin ( "Settings",0 );
 
           ImGui::Text("Timestamp: %.0f:%.0f:%.0f.%.0f", read_time_h.load(),read_time_m.load(),read_time_s.load(),read_time_ms.load());
 
-            if (ImGui::Button("Reconnect")) {
-                // Do something when the button is clicked
-                closeSerialPort();
-                if (openSerialPort(port)) {
-                    con_status = 1;
-                } else {
-                    con_status = 0;
-                }
-            }
-            ImGui::Text("Connected = %d", con_status);
+          if (ImGui::Button("Reconnect")) {
+              // Do something when the button is clicked
+              closeSerialPort();
+              if (openSerialPort(port)) {
+                  con_status = 1;
+              } else {
+                  con_status = 0;
+              }
+          }
+          ImGui::Text("Connected = %d", con_status);
 
-            ImGui::InputText("Enter port.", port, sizeof(port), ImGuiInputTextFlags_EnterReturnsTrue);
+          ImGui::InputText("Enter port.", port, sizeof(port), ImGuiInputTextFlags_EnterReturnsTrue);
 
-            if (ImGui::Button("Log File Location")) {
-                // Do something when the button is clicked
-                if (filesave.load() == 0) {
-                    filesave.store(1);
-                } else {
-                    filesave.store(0);
-                }
-            }
-                ImGui::Text("File = %d", filesave.load());
+          if (ImGui::Button("Log File Location")) {
+              // Do something when the button is clicked
+              if (filesave.load() == 0) {
+                  filesave.store(1);
+              } else {
+                  filesave.store(0);
+              }
+          }
+          ImGui::Text("File = %d", filesave.load());
 
-                ImGui::InputText("Enter file location.", buffer2, sizeof(buffer2),
-                                 ImGuiInputTextFlags_EnterReturnsTrue);
+          ImGui::InputText("Enter file location.", buffer2, sizeof(buffer2),
+                           ImGuiInputTextFlags_EnterReturnsTrue);
           ImGui::End();
 
+          ImGui::End();
 
           // Render ImGui frame
           ImGui::Render();
@@ -223,15 +237,22 @@ int main ( int argc, char const *argv[] )
           glfwSwapBuffers ( window );
         }
 
-      t.join();
-
       // Cleanup
+      closeSerialPort();
+      std::cout << "CLOSING SERIAL PORT" << std::endl;
       ImGui_ImplOpenGL3_Shutdown();
+      std::cout << "SHUTTING DOWN GL" << std::endl;
       ImGui_ImplGlfw_Shutdown();
-      ImPlot::CreateContext();
+      std::cout << "SHUTTING DOWN GL" << std::endl;
+      ImPlot::DestroyContext();
+      std::cout << "KILLING CONTEXT" << std::endl;
       ImGui::DestroyContext();
+      std::cout << "DESTROYING WINDOW" << std::endl;
       glfwDestroyWindow ( window );
+      std::cout << "TERMINATING GLFW" << std::endl;
       glfwTerminate();
+      std::cout << "MERGING THREADS" << std::endl;
+      t.join();
       return 0;
 
 }

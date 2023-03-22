@@ -30,8 +30,8 @@ std::multimap < std::string, std::string > parsed_data;
 bool con_status = 0;
 bool open_file = 1;
 std::string line = "";
-char port[256] = "/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_85734323430351B0C0A2-if00";
-char buffer2[256] = "/home/nmiller/data.csv";
+char port[256] = "COM3";
+char buffer2[256] = "data.csv";
 
 
 //*************************************************************************
@@ -56,9 +56,9 @@ void read_and_parse(char port[256], char loc[256])
 
       if (filesave.load() == true) {
           std::ofstream csv_file ( buffer2 );
+          openSerialPort(port);
           while (filesave.load() == true) {
 
-              openSerialPort(port);
               line = readSerialPort ( "GPS_STAT" );
               parseData ( parsed_data, line );
               saveFile(parsed_data,csv_file);
@@ -81,9 +81,10 @@ void read_and_parse(char port[256], char loc[256])
               read_altitude.store(retrieveLatest(parsed_data, R"(Altitude)"));
           }
           csv_file.close();
+          closeSerialPort();
       } else if (filesave.load() == false) {
+          openSerialPort(port);
           while (filesave.load() == false) {
-              openSerialPort(port);
               line = readSerialPort("GPS_STAT");
               parseData(parsed_data, line);
 
@@ -104,6 +105,7 @@ void read_and_parse(char port[256], char loc[256])
               read_sat.store(retrieveLatest(parsed_data, R"(Satellite)"));
               read_altitude.store(retrieveLatest(parsed_data, R"(Altitude)"));
           }
+          closeSerialPort();
       }
 
     }

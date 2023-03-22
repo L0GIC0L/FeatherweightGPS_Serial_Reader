@@ -522,7 +522,6 @@ void Demo_Map ( TileManager& mngr, double lat, double lng)
 
 void livePlot ( double vx, double vy, double vz, const char* name1, const char* name2, const char* name3)
 {
-  ImGui::BulletText ( "This is the Altitude Data" );
   static ScrollingBuffer vxdata1, vydata1, vzdata1;
   static RollingBuffer   vxdata2, vydata2, vzdata2;
   static float t = 0;

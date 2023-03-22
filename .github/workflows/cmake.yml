@@ -20,6 +20,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
+    - name: Update apt
+      run: sudo apt-get update
+    
     - name: Install Dependencies
       run: sudo apt-get install libglew-dev libglfw3 libglfw3-dev curl libcurl4-gnutls-dev libopengl-dev
       

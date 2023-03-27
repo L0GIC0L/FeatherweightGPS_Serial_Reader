@@ -7,12 +7,13 @@ These are the objectives that must be accomplished before first release:
 - [ ] Research Imgui tiling and a backround window transparency
 - [ ] Create a dedicated window to reconnect to GPS, set COM port, and set the log file location.
 - [ ] Create a window to display the latest data in text form.
-- [ ] Add theming.
 
 ### In Progress
 
 - [ ] Create plots that properly display velocity and altitude.
+  - [ ] Fix Plots
 - [ ] Create a plot to overlay over the map that displays GPS longitude and latitude.
+  - [ ] Solve coordinate mapping issues.
 
 ### Done ✓
 

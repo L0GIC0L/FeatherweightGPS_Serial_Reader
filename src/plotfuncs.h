@@ -520,46 +520,63 @@ void Demo_Map ( TileManager& mngr, double lat, double lng)
 
 }
 
-void livePlot ( double vx, double vy, double vz, const char* name1, const char* name2, const char* name3)
+// Define the number of buffers
+constexpr int kNumBuffers = 10;
+
+// Define a struct to hold data for each buffer
+struct BufferData {
+    ScrollingBuffer scrollx, scrolly, scrollz;
+    RollingBuffer rollx, rolly, rollz;
+};
+
+// Define an array of BufferData objects
+BufferData buffers[kNumBuffers];
+
+
+void livePlot (int bufferNumber, double vx, double vy, double vz, const char* name1, const char* name2, const char* name3)
 {
-  static ScrollingBuffer vxdata1, vydata1, vzdata1;
-  static RollingBuffer   vxdata2, vydata2, vzdata2;
-  static float t = 0;
-  t += ImGui::GetIO().DeltaTime;
-  vxdata1.AddPoint ( t, vx * 0.01f );
-  vydata1.AddPoint ( t, vy * 0.01f );
-  vzdata1.AddPoint ( t, vz * 0.01f );
+    // Get a reference to the selected buffer's data
+    auto& buffer = buffers[bufferNumber];
 
-  vxdata2.AddPoint ( t, vx * 0.01f );
-  vydata2.AddPoint ( t, vy * 0.01f );
-  vzdata2.AddPoint ( t, vz * 0.01f );
+    // Add data to the scrolling and rolling buffers
+    float t = ImGui::GetTime();
+    buffer.scrollx.AddPoint(t, static_cast<float>(vx * 0.01));
+    buffer.scrolly.AddPoint(t, static_cast<float>(vy * 0.01));
+    buffer.scrollz.AddPoint(t, static_cast<float>(vz * 0.01));
+    buffer.rollx.AddPoint(t, static_cast<float>(vx*0.01));
+    buffer.rolly.AddPoint(t, static_cast<float>(vy*0.01));
+    buffer.rollz.AddPoint(t, static_cast<float>(vz*0.01));
 
-  static float history = 10.0f;
-  ImGui::SliderFloat ( "History",&history,1,120,"%.1f s" );
-  vxdata2.Span = history;
-  vydata2.Span = history;
-  vzdata2.Span = history;
+    // Set the history span for the rolling buffer
+    static float history = 10.0f;
+    ImGui::SliderFloat("History", &history, 1, 120*5, "%.1f s");
+    buffer.rollx.Span = history;
+    buffer.rolly.Span = history;
+    buffer.rollz.Span = history;
 
+    buffer.scrollx.MaxSize = 100*600;
+    buffer.scrolly.MaxSize = 100*600;
+    buffer.scrollz.MaxSize = 100*600;
 
-  if ( ImPlot::BeginPlot ( "##Scrolling", ImVec2 ( -1,150 ) ) )
-    {
-      ImPlot::SetupAxes ( NULL, NULL, NULL, NULL );
-      ImPlot::SetupAxisLimits ( ImAxis_X1,t - history, t, ImGuiCond_Always );
-      ImPlot::SetupAxisLimits ( ImAxis_Y1,0,1 );
-      ImPlot::SetNextFillStyle ( IMPLOT_AUTO_COL,0.5f );
-      ImPlot::PlotLine ( name1, &vxdata1.Data[0].x, &vxdata1.Data[0].y, vxdata1.Data.size(), 0, vxdata1.Offset, 2 * sizeof ( float ) );
-      ImPlot::PlotLine ( name2, &vydata1.Data[0].x, &vydata1.Data[0].y, vydata1.Data.size(), 0, vydata1.Offset, 2*sizeof ( float ) );
-      ImPlot::PlotLine ( name3, &vzdata1.Data[0].x, &vzdata1.Data[0].y, vzdata1.Data.size(), 0, vzdata1.Offset, 2*sizeof ( float ) );
-      ImPlot::EndPlot();
+    // Plot the data
+    if (ImPlot::BeginPlot("##Scrolling", ImVec2(-1, 150))) {
+        ImPlot::SetupAxes(NULL, NULL, NULL, NULL);
+        ImPlot::SetupAxisLimits(ImAxis_X1, t - history, t, ImGuiCond_Always);
+        ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 10);
+        ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
+        ImPlot::PlotLine(name1, &buffer.scrollx.Data[0].x, &buffer.scrollx.Data[0].y, buffer.scrollx.Data.size(), 0, buffer.scrollx.Offset, 2 * sizeof(float));
+        ImPlot::PlotLine(name2, &buffer.scrolly.Data[0].x, &buffer.scrolly.Data[0].y, buffer.scrolly.Data.size(), 0, buffer.scrolly.Offset, 2 * sizeof(float));
+        ImPlot::PlotLine(name3, &buffer.scrollz.Data[0].x, &buffer.scrollz.Data[0].y, buffer.scrollz.Data.size(), 0, buffer.scrollz.Offset, 2 * sizeof(float));
+        ImPlot::EndPlot();
     }
-  if ( ImPlot::BeginPlot ( "##Rolling", ImVec2 ( -1,150 ) ) )
-    {
-      ImPlot::SetupAxes ( NULL, NULL, NULL, NULL );
-      ImPlot::SetupAxisLimits ( ImAxis_X1,0,history, ImGuiCond_Always );
-      ImPlot::SetupAxisLimits ( ImAxis_Y1,0,1 );
-      ImPlot::PlotLine ( name1, &vxdata2.Data[0].x, &vxdata2.Data[0].y, vxdata2.Data.size(), 0, 0, 2 * sizeof ( float ) );
-      ImPlot::PlotLine ( name2, &vydata2.Data[0].x, &vydata2.Data[0].y, vydata2.Data.size(), 0, 0, 2 * sizeof ( float ) );
-      ImPlot::PlotLine ( name3, &vzdata2.Data[0].x, &vzdata2.Data[0].y, vzdata2.Data.size(), 0, 0, 2 * sizeof ( float ) );
-      ImPlot::EndPlot();
+
+    if (ImPlot::BeginPlot("##Rolling", ImVec2(-1, 150))) {
+        ImPlot::SetupAxes(NULL, NULL, NULL, NULL);
+        ImPlot::SetupAxisLimits(ImAxis_X1, 0, history, ImGuiCond_Always);
+        ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 10);
+        ImPlot::PlotLine(name1, &buffer.rollx.Data[0].x, &buffer.rollx.Data[0].y, buffer.rollx.Data.size(), 0, 0, 2 * sizeof(float));
+        ImPlot::PlotLine(name2, &buffer.rolly.Data[0].x, &buffer.rolly.Data[0].y, buffer.rolly.Data.size(), 0, 0, 2 * sizeof(float));
+        ImPlot::PlotLine(name3, &buffer.rollz.Data[0].x, &buffer.rollz.Data[0].y, buffer.rollz.Data.size(), 0, 0, 2 * sizeof(float));
+        ImPlot::EndPlot();
     }
 }

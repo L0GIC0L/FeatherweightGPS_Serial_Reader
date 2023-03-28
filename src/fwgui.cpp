@@ -12,6 +12,7 @@
 #include <thread>
 #include <atomic>
 #include "../common/Fonts/Fonts.h"
+#include "../common/Image.h"
 
 //********************************************************************************************
 
@@ -46,7 +47,7 @@ int read_and_parse(char rport_selection[256], char rlog_file_directory[256]) {
     static std::ofstream csv_file;
 
     while (!shutdown_thread.load()) {
-        if (connection_status.load()) {
+        if (connection_status.load() && !shutdown_thread.load()) {
             openSerialPort(rport_selection);
 
             while (!paused_status.load() && !shutdown_thread.load()) {
@@ -78,17 +79,16 @@ int read_and_parse(char rport_selection[256], char rlog_file_directory[256]) {
                 } else if (csv_file.is_open()) {
                     csv_file.close();
                 }
-            }
-        }
 
-        if (shutdown_thread.load()) {
-            if (csv_file.is_open()) {
-                csv_file.close();
+                if (shutdown_thread.load()) {
+                    cout << "EXITING THREAD" << endl;
+                    return 0;
+                }
             }
-            closeSerialPort();
-            return 0;
         }
     }
+    closeSerialPort();
+    csv_file.close();
     return 0;
 }
 
@@ -153,7 +153,7 @@ int main(int argc, char const *argv[]) {
     // Define the threads
     std::thread read_serial_thread(&read_and_parse, port_selection, log_file_directory);
 
-
+    //LoadFromFile("icon.png");
 
     // Main loop
 
@@ -269,8 +269,6 @@ int main(int argc, char const *argv[]) {
 
     // Cleanup
     shutdown_thread.store(true);
-    std::cout << "KILLING SERIAL LOOP" << std::endl;
-    closeSerialPort();
     std::cout << "CLOSING SERIAL PORT" << std::endl;
     ImGui::GetIO().Fonts->ClearFonts();
     std::cout << "WIPING FONTS" << std::endl;

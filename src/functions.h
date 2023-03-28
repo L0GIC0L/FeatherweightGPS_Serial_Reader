@@ -112,3 +112,4 @@ double latestr = -1;
         }
   return latestr;
 }
+

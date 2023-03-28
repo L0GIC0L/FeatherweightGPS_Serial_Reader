@@ -11,6 +11,7 @@
 #include "plotfuncs.h"
 #include <thread>
 #include <atomic>
+#include "../common/Fonts/Fonts.h"
 
 //********************************************************************************************
 
@@ -100,6 +101,7 @@ int main(int argc, char const *argv[]) {
     GLFWwindow *window = glfwCreateWindow(1280, 720, "Featherweight-GPS", nullptr, nullptr);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
+
     // Initialize GLEW
     glewExperimental = GL_TRUE;
     glewInit();
@@ -115,15 +117,29 @@ int main(int argc, char const *argv[]) {
     //Set ImGui flags
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-    //io.ConfigFlags |= ImGuiConfigFlags_Viewport_selectionsEnable;         // Enable Multi-Viewport_selection / Platform Windows
+    //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport_selection / Platform Windows
 
     //Setup the styles
     ImGui::GetStyle().AntiAliasedLines = true;
     ImGui::GetStyle().AntiAliasedFill = true;
     ImGui::StyleColorsLight();
     ImGuiStyle &style = ImGui::GetStyle();
-    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-    style.WindowRounding = 5.0f; // Set the window rounding radius to 5.
+    style.WindowMinSize        = ImVec2( 160, 20 );
+    style.FramePadding         = ImVec2( 4, 2 );
+    style.ItemSpacing          = ImVec2( 6, 2 );
+    style.ItemInnerSpacing     = ImVec2( 6, 4 );
+    style.WindowRounding       = 4.0f;
+    style.FrameRounding        = 2.0f;
+    style.IndentSpacing        = 6.0f;
+    style.ItemInnerSpacing     = ImVec2( 2, 4 );
+    style.ColumnsMinSpacing    = 50.0f;
+    style.GrabMinSize          = 14.0f;
+    style.GrabRounding         = 4.0f;
+    style.ScrollbarSize        = 12.0f;
+    style.ScrollbarRounding    = 16.0f;
+    ImGui::GetStyle().Colors[ImGuiCol_WindowBg].w = 1.0f; // set window background color alpha to opaque
+    ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg].w = 0.0f; // set docking empty background color alpha to transparent
+
 
     // Setup ImGui GLFW backend
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -137,6 +153,9 @@ int main(int argc, char const *argv[]) {
     std::thread read_serial_thread(&read_and_parse, port_selection, log_file_directory);
 
     // Main loop
+
+    ImFont* font = io.Fonts->AddFontFromMemoryTTF(Roboto_Regular_ttf, Roboto_Regular_ttf_len, 16.0f);
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
@@ -150,9 +169,9 @@ int main(int argc, char const *argv[]) {
 
         ImGui::Begin("Main Window", nullptr,
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
-                     ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus |
-                     ImGuiWindowFlags_NoBackground);
+                     ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
+        ImGui::PushFont(font);
         if (ImGui::BeginMenuBar()) {
             // Menu bar contents here
             ImGui::EndMenuBar();

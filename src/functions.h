@@ -59,15 +59,15 @@ void parseData(std::multimap<std::string, std::string>& parsed_data, std::string
       match[7]
     });
     parsed_data.insert({
-      "VelocityX",
+      "Horizontal_Velocity",
       match[8]
     });
     parsed_data.insert({
-      "VelocityY",
+      "Horizontal_Heading",
       match[9]
     });
     parsed_data.insert({
-      "VelocityZ",
+      "Vertical_Velocity",
       match[10]
     });
     parsed_data.insert({
@@ -81,7 +81,7 @@ void saveFile(std::multimap<std::string, std::string>& parsed_data, std::ofstrea
 
     // Output the latest value for each key
     csv_file << "{";
-    for (const auto& key : {"Hour", "Minute", "Seconds", "Milliseconds", "Altitude", "Latitude", "Longitude", "VelocityX", "VelocityY", "VelocityZ", "Satellite"}) {
+    for (const auto& key : {"Hour", "Minute", "Seconds", "Milliseconds", "Altitude", "Latitude", "Longitude", "Horizontal_Velocity", "Horizontal_Heading", "Vertical_Velocity", "Satellite"}) {
         std::cout << key << ": ";
         auto range = parsed_data.equal_range(key);
         auto it = range.second;

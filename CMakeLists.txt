@@ -9,7 +9,7 @@ set(featherweightgps_serial_reader_sources
         src/fwgui.cpp imgui/imgui.cpp imgui/imgui_draw.cpp
         imgui/imgui_tables.cpp imgui/imgui_widgets.cpp implot/implot.cpp
         implot/implot_items.cpp backends/imgui_impl_glfw.cpp
-        backends/imgui_impl_opengl3.cpp common/Fonts/RobotoRegular.cpp
+        backends/imgui_impl_opengl3.cpp common/Fonts/RobotoMonoRegular.cpp
 )
 
 

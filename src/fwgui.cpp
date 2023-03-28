@@ -24,13 +24,11 @@ std::multimap<std::string, std::string> parsed_data;
 std::string line_selection;
 char port_selection[256] = "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0";
 char log_file_directory[256] = "data.csv";
-double delta_time_new = 0;
-double delta_time_olde = 0;
 
 
 //*************************************************************************
 //Define the velocity atomic types
-std::atomic<double> read_vel_x, read_vel_y, read_vel_z;
+std::atomic<double> read_vel_x, read_vel_d, read_vel_z;
 
 //Define the time atomic types
 std::atomic<double> read_time_ms, read_time_s, read_time_m, read_time_h, read_delta_time;
@@ -62,9 +60,9 @@ int read_and_parse(char rport_selection[256], char rlog_file_directory[256]) {
                 read_time_h.store(retrieveLatest(parsed_data, R"(Hour)"));
 
                 //Retrieve velocity from map
-                read_vel_x.store(retrieveLatest(parsed_data, R"(VelocityX)"));
-                read_vel_y.store(retrieveLatest(parsed_data, R"(VelocityY)"));
-                read_vel_z.store(retrieveLatest(parsed_data, R"(VelocityZ)"));
+                read_vel_x.store(retrieveLatest(parsed_data, R"(Horizontal_Velocity)"));
+                read_vel_d.store(retrieveLatest(parsed_data, R"(Horizontal_Heading)"));
+                read_vel_z.store(retrieveLatest(parsed_data, R"(Vertical_Velocity)"));
 
                 //Retrieve latitude, longitude, and altitude from map
                 read_latitude.store(retrieveLatest(parsed_data, R"(Latitude)"));
@@ -107,12 +105,14 @@ int main(int argc, char const *argv[]) {
     glewInit();
 //****************************************************************
 
-    // Setup ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImPlot::CreateContext();
-    ImGuiIO &io = ImGui::GetIO();
+
+    // Setup ImGui context
+    ImGuiIO& io = ImGui::GetIO();
     (void) io;
+
 
     //Set ImGui flags
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
@@ -140,6 +140,7 @@ int main(int argc, char const *argv[]) {
     ImGui::GetStyle().Colors[ImGuiCol_WindowBg].w = 1.0f; // set window background color alpha to opaque
     ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg].w = 0.0f; // set docking empty background color alpha to transparent
 
+    ImFont* font = io.Fonts->AddFontFromMemoryTTF(RobotoMono_Regular_ttf, RobotoMono_Regular_ttf_len ,18.0f);
 
     // Setup ImGui GLFW backend
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -152,9 +153,9 @@ int main(int argc, char const *argv[]) {
     // Define the threads
     std::thread read_serial_thread(&read_and_parse, port_selection, log_file_directory);
 
-    // Main loop
 
-    ImFont* font = io.Fonts->AddFontFromMemoryTTF(Roboto_Regular_ttf, Roboto_Regular_ttf_len, 16.0f);
+
+    // Main loop
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -172,32 +173,26 @@ int main(int argc, char const *argv[]) {
                      ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
         ImGui::PushFont(font);
-        if (ImGui::BeginMenuBar()) {
-            // Menu bar contents here
-            ImGui::EndMenuBar();
-        }
 
         // Create the dock space
         ImGui::DockSpace(ImGui::GetID("Dockspace Window"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
 
         // Window contents here
         ImGui::Begin("Velocity");
-        delta_time_olde = delta_time_new;
-        delta_time_new = read_time_s.load();
-        if (delta_time_new-delta_time_olde > 0) {
-            cout << "Variable changed from " << delta_time_olde << " to " << delta_time_new << endl;
-        }
 
-        livePlot(1,read_vel_x.load(), read_vel_y.load(), read_vel_z.load(),"Velocity X","Velocity Y", "Velocity Z");
+        livePlot(1,read_vel_x.load(), read_vel_d.load(), read_vel_z.load(),"Horizonatal Velocity","Horizontal Heading", "Upward Velocity");
 
-        ImGui::BulletText("This is the Velocity Data");
-        ImGui::BulletText("Velocity X: %.0f", read_vel_x.load());
+        ImGui::Text("Velocity Data:");
+        ImGui::BulletText("Velocity (Horizontal, Vertical): (%.0f, %.0f)", read_vel_x.load(),read_vel_z.load());
+
+        ImGui::Text("Heading:");
+        ImGui::BulletText("Heading %.0f", read_vel_d.load());
         ImGui::End();
 
         ImGui::Begin("Altitude");
         livePlot(2, read_altitude.load(), NULL, NULL,"Altitude", "", "");
+        ImGui::Text("Current Altitude:");
         ImGui::BulletText("Altitude: %.0f", read_altitude.load());
-        ImGui::BulletText("This is the Altitude Data");
         ImGui::End();
 
         ImGui::Begin("Map", nullptr);
@@ -252,6 +247,8 @@ int main(int argc, char const *argv[]) {
         ImGui::BulletText("Paused = %d", paused_status.load());
         ImGui::End();
 
+        ImGui::PopFont();
+
         ImGui::End();
 
         // Render ImGui frame
@@ -271,16 +268,20 @@ int main(int argc, char const *argv[]) {
     }
 
     // Cleanup
-    closeSerialPort();
     shutdown_thread.store(true);
+    std::cout << "KILLING SERIAL LOOP" << std::endl;
+    closeSerialPort();
     std::cout << "CLOSING SERIAL PORT" << std::endl;
+    ImGui::GetIO().Fonts->ClearFonts();
+    std::cout << "WIPING FONTS" << std::endl;
     ImGui_ImplOpenGL3_Shutdown();
     std::cout << "SHUTTING DOWN GL" << std::endl;
     ImGui_ImplGlfw_Shutdown();
-    std::cout << "SHUTTING DOWN GL" << std::endl;
+    std::cout << "SHUTTING DOWN GLFW" << std::endl;
     ImPlot::DestroyContext();
     std::cout << "KILLING CONTEXT" << std::endl;
-    ImGui::DestroyContext();
+    // code that causes the invalid pointer error
+    //ImGui::DestroyContext();
     std::cout << "DESTROYING WINDOW" << std::endl;
     glfwDestroyWindow(window);
     std::cout << "TERMINATING GLFW" << std::endl;

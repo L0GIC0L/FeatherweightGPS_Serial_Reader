@@ -1,5 +1,6 @@
 # FeatherweightGPS Serial Reader
 - A small C++ project to read the Featherwieght ground station serial data and plot it in real-time using the IMgui graphics library.
+![Image](FeatherweightGUI.png)
 - **To build on Windows:**
   - Install MSYS2
   - Open MSYS2

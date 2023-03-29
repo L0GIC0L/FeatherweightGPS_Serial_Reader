@@ -49,7 +49,7 @@ namespace fs = std::filesystem;
 #define TILE_SIZE     256                                 // the expected size of tiles in pixels, e.g. 256x256px
 #define MAX_ZOOM      19                                  // the maximum zoom level provided by the server
 #define MAX_THREADS   2                                   // the maximum threads to use for downloading tiles (OSC strictly forbids more than 2)
-#define USER_AGENT    "ImMaps/0.1"                        // change this to represent your own app if you extend this code
+#define USER_AGENT    "FeatherweightGPSReader/0.1"        // change this to represent your own app if you extend this code
 
 //#define PI 3.14159265359
 
@@ -317,6 +317,9 @@ private:
           curl_easy_setopt ( curl, CURLOPT_WRITEFUNCTION, curl_write_cb );
           curl_easy_setopt ( curl, CURLOPT_FOLLOWLOCATION, 1 );
           curl_easy_setopt ( curl, CURLOPT_USERAGENT, USER_AGENT );
+          //curl_easy_setopt ( curl, CURLOPT_VERBOSE, USER_AGENT );
+          curl_easy_setopt ( curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+          curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE);
           for ( ;; )
             {
               TileCoord coord;

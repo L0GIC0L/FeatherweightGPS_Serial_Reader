@@ -51,17 +51,15 @@ namespace fs = std::filesystem;
 #define MAX_THREADS   2                                   // the maximum threads to use for downloading tiles (OSC strictly forbids more than 2)
 #define USER_AGENT    "ImMaps/0.1"                        // change this to represent your own app if you extend this code
 
-#define PI 3.14159265359
+//#define PI 3.14159265359
 
-int long2tilex ( double lon, int z )
-{
-  return ( int ) ( floor ( ( lon + 180.0 ) / 360.0 * ( 1 << z ) ) );
+double long2tilex ( double lon ) {
+    return ((lon + 180.0) / 360.0);
 }
-
-int lat2tiley ( double lat, int z )
+double lat2tiley ( double lat )
 {
   double latrad = lat * PI/180.0;
-  return ( int ) ( floor ( ( 1.0 - asinh ( tan ( latrad ) ) / PI ) / 2.0 * ( 1 << z ) ) );
+  return ( ( 1.0 - asinh ( tan ( latrad ) ) / PI ) / 2.0 );
 }
 
 double tilex2long ( int x, int z )
@@ -464,6 +462,12 @@ void Demo_Map ( TileManager& mngr, double lat, double lng)
   static int renders = 0;
   static bool debug = false;
   static double vals[] = {1, 1, 1};
+    static ImVector<double> x_data;
+    static ImVector<double> y_data;
+
+    // In your update loop or callback:
+    x_data.push_back(lat);
+    y_data.push_back(lng);
 
   if ( debug )
     {
@@ -480,9 +484,6 @@ void Demo_Map ( TileManager& mngr, double lat, double lng)
     {
       ImPlot::SetupAxes ( NULL,NULL,ax_flags,ax_flags|ImPlotAxisFlags_Invert );
       ImPlot::SetupAxesLimits ( 0,1,0,1 );
-
-        //Begin Overlay Plot
-        ImPlot::PlotScatter ( "GPS Coords", &lat, &lng, 2);
 
         auto pos  = ImPlot::GetPlotPos();
       auto size = ImPlot::GetPlotSize();
@@ -513,7 +514,10 @@ void Demo_Map ( TileManager& mngr, double lat, double lng)
       ImPlot::GetPlotDrawList()->AddText ( {pos.x + label_off.x, pos.y+size.y-label_size.y-label_off.y},IM_COL32_BLACK,label );
       ImPlot::PopPlotClipRect();
 
+        //Begin Overlay Plot
+        ImPlot::PlotLine( "GPS Trail", x_data.Data, y_data.Data, x_data.Size);
 
+        ImPlot::PlotScatter("Current GPS Coodinates",&x_data.Data[x_data.Size-1], &y_data.Data[x_data.Size-1], 1);
       ImPlot::EndPlot();
     }
 

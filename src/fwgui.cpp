@@ -25,6 +25,7 @@ std::multimap<std::string, std::string> parsed_data;
 std::string line_selection;
 char port_selection[256] = "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0";
 char log_file_directory[256] = "data.csv";
+static int num_updates = 0;
 
 
 //*************************************************************************
@@ -79,6 +80,8 @@ int read_and_parse(char rport_selection[256], char rlog_file_directory[256]) {
                 } else if (csv_file.is_open()) {
                     csv_file.close();
                 }
+
+                num_updates++;
 
                 if (shutdown_thread.load()) {
                     cout << "EXITING THREAD" << endl;
@@ -198,7 +201,7 @@ int main(int argc, char const *argv[]) {
         ImGui::Begin("Map", nullptr);
         TileManager mngr;
         //Demo_Map ( mngr, ((read_latitude.load()+90)/360), ((read_longitude.load()+180)/360) );
-        Demo_Map(mngr, ((37.35242 + 90) / 360), ((-79.18018 + 180) / 360));
+        Demo_Map(mngr, lat2tiley(read_latitude.load()), long2tilex(read_longitude.load()));
         ImGui::End();
 
         ImGui::Begin("Settings", nullptr);
@@ -245,6 +248,9 @@ int main(int argc, char const *argv[]) {
             paused_status.store(!paused_status.load());
         }
         ImGui::BulletText("Paused = %d", paused_status.load());
+
+        ImGui::Text("\n\nCurrent Coordinates: ( %.5f : %.5f )", read_longitude.load(), read_latitude.load());
+
         ImGui::End();
 
         ImGui::PopFont();

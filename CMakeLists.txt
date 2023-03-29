@@ -23,7 +23,7 @@ target_include_directories(featherweightgps_serial_reader PUBLIC
         imgui implot backends 3rdparty/glad/include common/Fonts
 )
 
-target_link_libraries(featherweightgps_serial_reader
-        glfw curl GLEW::glew GL
+target_link_libraries(featherweightgps_serial_reader PRIVATE
+        glfw curl GLEW::glew
 )
 

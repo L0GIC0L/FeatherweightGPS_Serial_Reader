@@ -25,29 +25,33 @@ bool openSerialPort(std::string port) {
     // Disable buffer synchronization for cout
     ios_base::sync_with_stdio(false);
 
-    char const *dave = port.data();
     // Open the serial port
-    hSerial = CreateFileA(dave, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+    hSerial = CreateFileA(port.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL,
         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
     if (hSerial == INVALID_HANDLE_VALUE) {
-        cout << "Error opening serial port" << endl;
-        return 1;
+        cout << "Error opening serial port!?!?!?!" << endl;
+          return false;
     }
 
     // Set the parameters for the serial communication
     dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
     if (!GetCommState(hSerial, &dcbSerialParams)) {
         cout << "Error getting the serial port state" << endl;
-        return 1;
+        return false;
     }
+
     dcbSerialParams.BaudRate = CBR_115200;
     dcbSerialParams.ByteSize = 8;
     dcbSerialParams.StopBits = ONESTOPBIT;
     dcbSerialParams.Parity = NOPARITY;
+
     if (!SetCommState(hSerial, &dcbSerialParams)) {
         cout << "Error setting serial port state" << endl;
-        return 1;
+        return false;
     }
+
+    cout << "Serial port opened successfully." << endl;
 #else
     serialPort = open(port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (serialPort == -1)
@@ -106,12 +110,15 @@ string readSerialPort(string param)
     string line;
     string buffer;
 
+    DCB dcbSerialParams = { 0 };
+
      dwBytesRead = 0;
-     while (true) {
-        if (!ReadFile(hSerial, &incomingChar, 1, &dwBytesRead, NULL)) {
-            cout << "Error reading from the serial port" << endl;
-            exit;
-        }
+     while ( hSerial != INVALID_HANDLE_VALUE && GetCommState(hSerial, &dcbSerialParams) ) {
+
+         if (!ReadFile(hSerial, &incomingChar, 1, &dwBytesRead, NULL)) {
+             cout << "Error reading from the serial port" << endl;
+         }
+
         if (dwBytesRead == 0) {
             // No data received, try again
             continue;
@@ -129,7 +136,6 @@ string readSerialPort(string param)
         }
         if (!buffer.empty() && buffer.back() == '\n') {
             return buffer;
-            buffer.clear();
         }
     }
 #else

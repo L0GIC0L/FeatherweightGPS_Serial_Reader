@@ -23,7 +23,7 @@ std::multimap<std::string, std::string> parsed_data;
 
 //Function variable definitions
 std::string line_selection;
-char port_selection[256] = "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0";
+char port_selection[256] = "COM987";
 char log_file_directory[256] = "data.csv";
 static int num_updates = 0;
 
@@ -49,7 +49,6 @@ int read_and_parse(char rport_selection[256], char rlog_file_directory[256]) {
 
     while (!shutdown_thread.load()) {
         if (connection_status.load() && !shutdown_thread.load()) {
-            openSerialPort(rport_selection);
 
             while (!paused_status.load() && !shutdown_thread.load()) {
                 line_selection = readSerialPort("GPS_STAT");

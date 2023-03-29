@@ -12,7 +12,6 @@
 #include <thread>
 #include <atomic>
 #include "../common/Fonts/Fonts.h"
-#include "../common/Image.h"
 
 //********************************************************************************************
 
@@ -25,7 +24,7 @@ std::multimap<std::string, std::string> parsed_data;
 std::string line_selection;
 char port_selection[256] = "COM987";
 char log_file_directory[256] = "data.csv";
-static int num_updates = 0;
+bool clear_map = false;
 
 
 //*************************************************************************
@@ -33,17 +32,17 @@ static int num_updates = 0;
 std::atomic<double> read_vel_x, read_vel_d, read_vel_z;
 
 //Define the time atomic types
-std::atomic<double> read_time_ms, read_time_s, read_time_m, read_time_h, read_delta_time;
+std::atomic<double> read_time_ms, read_time_s, read_time_m, read_time_h;
 
 //Define the location atomic types
 std::atomic<double> read_altitude, read_longitude, read_latitude, read_sat;
 
-std::atomic<bool> connection_status, filesave_status, paused_status, shutdown_thread(false);
+std::atomic<bool> connection_status, file_save_status, paused_status, shutdown_thread(false);
 
 //*************************************************************************
 
 //This is a function to read and parse the velocity
-int read_and_parse(char rport_selection[256], char rlog_file_directory[256]) {
+int read_and_parse(char real_log_file_dir[256]) {
 
     static std::ofstream csv_file;
 
@@ -71,16 +70,14 @@ int read_and_parse(char rport_selection[256], char rlog_file_directory[256]) {
                 read_sat.store(retrieveLatest(parsed_data, R"(Satellite)"));
                 read_altitude.store(retrieveLatest(parsed_data, R"(Altitude)"));
 
-                if (filesave_status.load()) {
+                if (file_save_status.load()) {
                     if (!csv_file.is_open()) {
-                        csv_file.open(rlog_file_directory);
+                        csv_file.open(real_log_file_dir);
                     }
                     saveFile(parsed_data, csv_file);
                 } else if (csv_file.is_open()) {
                     csv_file.close();
                 }
-
-                num_updates++;
 
                 if (shutdown_thread.load()) {
                     cout << "EXITING THREAD" << endl;
@@ -91,7 +88,7 @@ int read_and_parse(char rport_selection[256], char rlog_file_directory[256]) {
     }
     closeSerialPort();
     csv_file.close();
-    return 0;
+    return 1;
 }
 
 int main(int argc, char const *argv[]) {
@@ -149,13 +146,11 @@ int main(int argc, char const *argv[]) {
     ImGui_ImplOpenGL3_Init("#version 330");
 
     connection_status.store(false);
-    filesave_status.store(false);
+    file_save_status.store(false);
     paused_status.store(false);
 
     // Define the threads
-    std::thread read_serial_thread(&read_and_parse, port_selection, log_file_directory);
-
-    //LoadFromFile("icon.png");
+    std::thread read_serial_thread(&read_and_parse, log_file_directory);
 
     // Main loop
 
@@ -182,7 +177,7 @@ int main(int argc, char const *argv[]) {
         // Window contents here
         ImGui::Begin("Velocity");
 
-        livePlot(1,read_vel_x.load(), read_vel_d.load(), read_vel_z.load(),"Horizonatal Velocity","Horizontal Heading", "Upward Velocity");
+        livePlot(1,read_vel_x.load(), read_vel_d.load(), read_vel_z.load(),"Horizontal Velocity","Horizontal Heading", "Upward Velocity");
 
         ImGui::Text("Velocity Data:");
         ImGui::BulletText("Velocity (Horizontal, Vertical): (%.0f, %.0f)", read_vel_x.load(),read_vel_z.load());
@@ -192,7 +187,7 @@ int main(int argc, char const *argv[]) {
         ImGui::End();
 
         ImGui::Begin("Altitude");
-        livePlot(2, read_altitude.load(), NULL, NULL,"Altitude", "", "");
+        livePlot(2, read_altitude.load(), 0, 0,"Altitude", "", "");
         ImGui::Text("Current Altitude:");
         ImGui::BulletText("Altitude: %.0f", read_altitude.load());
         ImGui::End();
@@ -200,7 +195,7 @@ int main(int argc, char const *argv[]) {
         ImGui::Begin("Map", nullptr);
         TileManager mngr;
         //Demo_Map ( mngr, ((read_latitude.load()+90)/360), ((read_longitude.load()+180)/360) );
-        Demo_Map(mngr, lat2tiley(read_latitude.load()), long2tilex(read_longitude.load()));
+        Demo_Map(mngr, lat2tiley(read_latitude.load()), long2tilex(read_longitude.load()), clear_map);
         ImGui::End();
 
         ImGui::Begin("Settings", nullptr);
@@ -212,7 +207,7 @@ int main(int argc, char const *argv[]) {
             // Do something when the button is clicked
             cout << "BUTTON 'RECONNECT' PRESSED" << endl;
             closeSerialPort();
-            if (openSerialPort(port_selection) == true) {
+            if (openSerialPort(port_selection)) {
                 connection_status.store(true);
             } else {
                 connection_status.store(false);
@@ -230,9 +225,9 @@ int main(int argc, char const *argv[]) {
         ImGui::Text("\n\nEnter Log File Location Below: ");
         if (ImGui::Button("Log File Location")) {
             cout << "BUTTON 'LOG FILE' PRESSED" << endl;
-            filesave_status.store(!filesave_status.load());
+            file_save_status.store(!file_save_status.load());
         }
-        ImGui::BulletText("File = %d", filesave_status.load());
+        ImGui::BulletText("File = %d", file_save_status.load());
 
         // Particular widget styling
         ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255,128,128,255));
@@ -249,6 +244,11 @@ int main(int argc, char const *argv[]) {
         ImGui::BulletText("Paused = %d", paused_status.load());
 
         ImGui::Text("\n\nCurrent Coordinates: ( %.5f : %.5f )", read_longitude.load(), read_latitude.load());
+
+        if (ImGui::Button("Clear Map")) {
+            cout << "BUTTON 'Clear Map' PRESSED" << endl;
+            clear_map = true;
+        }
 
         ImGui::End();
 

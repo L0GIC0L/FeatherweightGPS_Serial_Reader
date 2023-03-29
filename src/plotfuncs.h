@@ -457,13 +457,19 @@ void Demo_InfiniteLines()
     }
 }
 
-void Demo_Map ( TileManager& mngr, double lat, double lng)
+void Demo_Map ( TileManager& mngr, double lat, double lng, bool &clear_map)
 {
   static int renders = 0;
   static bool debug = false;
   static double vals[] = {1, 1, 1};
     static ImVector<double> x_data;
     static ImVector<double> y_data;
+
+    if (clear_map == true) {
+        x_data.clear();
+        y_data.clear();
+        clear_map = false;
+    }
 
     // In your update loop or callback:
     x_data.push_back(lat);

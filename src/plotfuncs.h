@@ -318,8 +318,8 @@ private:
           curl_easy_setopt ( curl, CURLOPT_FOLLOWLOCATION, 1 );
           curl_easy_setopt ( curl, CURLOPT_USERAGENT, USER_AGENT );
           //curl_easy_setopt ( curl, CURLOPT_VERBOSE, USER_AGENT );
-          curl_easy_setopt ( curl, CURLOPT_SSL_VERIFYHOST, FALSE);
-          curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+          curl_easy_setopt ( curl, CURLOPT_SSL_VERIFYHOST, 0);
+          curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0);
           for ( ;; )
             {
               TileCoord coord;
@@ -460,7 +460,7 @@ void Demo_InfiniteLines()
     }
 }
 
-void Demo_Map ( TileManager& mngr, double lat, double lng, bool &clear_map)
+void Demo_Map ( TileManager& mngr, double x_coords, double y_coords, bool &clear_map)
 {
   static int renders = 0;
   static bool debug = false;
@@ -475,8 +475,8 @@ void Demo_Map ( TileManager& mngr, double lat, double lng, bool &clear_map)
     }
 
     // In your update loop or callback:
-    x_data.push_back(lat);
-    y_data.push_back(lng);
+    x_data.push_back(x_coords);
+    y_data.push_back(y_coords);
 
   if ( debug )
     {

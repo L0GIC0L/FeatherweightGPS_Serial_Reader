@@ -195,7 +195,7 @@ int main(int argc, char const *argv[]) {
         ImGui::Begin("Map", nullptr);
         TileManager mngr;
         //Demo_Map ( mngr, ((read_latitude.load()+90)/360), ((read_longitude.load()+180)/360) );
-        Demo_Map(mngr, lat2tiley(read_latitude.load()), long2tilex(read_longitude.load()), clear_map);
+        Demo_Map(mngr, long2tilex(read_longitude.load()), lat2tiley(read_latitude.load()),clear_map);
         ImGui::End();
 
         ImGui::Begin("Settings", nullptr);
@@ -243,7 +243,7 @@ int main(int argc, char const *argv[]) {
         }
         ImGui::BulletText("Paused = %d", paused_status.load());
 
-        ImGui::Text("\n\nCurrent Coordinates: ( %.5f : %.5f )", read_longitude.load(), read_latitude.load());
+        ImGui::Text("\n\nCurrent Coordinates: ( %.5f : %.5f )", read_latitude.load(), read_longitude.load());
 
         if (ImGui::Button("Clear Map")) {
             cout << "BUTTON 'Clear Map' PRESSED" << endl;

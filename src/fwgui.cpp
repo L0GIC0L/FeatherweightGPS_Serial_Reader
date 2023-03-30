@@ -26,6 +26,14 @@ char port_selection[256] = "COM987";
 char log_file_directory[256] = "data.csv";
 bool clear_map = false;
 
+static float latest_velocity = 0;
+static float old_velocity = 0;
+
+static float latest_time = 0;
+static float old_time = 0;
+
+static float acceleration = 0;
+
 
 //*************************************************************************
 //Define the velocity atomic types
@@ -243,12 +251,38 @@ int main(int argc, char const *argv[]) {
         }
         ImGui::BulletText("Paused = %d", paused_status.load());
 
-        ImGui::Text("\n\nCurrent Coordinates: ( %.5f : %.5f )", read_latitude.load(), read_longitude.load());
+        ImGui::Text("\n\nCurrent Coordinates: \n( %.5f : %.5f )\n\n", read_latitude.load(), read_longitude.load());
 
         if (ImGui::Button("Clear Map")) {
             cout << "BUTTON 'Clear Map' PRESSED" << endl;
             clear_map = true;
         }
+
+        ImGui::Text("\nCurrent Altitude:");
+        ImGui::BulletText("Altitude: %.0f", read_altitude.load());
+
+        ImGui::Text("\nVelocity Data:");
+        ImGui::BulletText("Velocity \n(Horizontal, Vertical): (%.0f, %.0f)", read_vel_x.load(),read_vel_z.load());
+/*
+        ImGui::Text("\nAcceleration Data:");
+
+            latest_time = (read_time_ms.load()*0.001)+(read_time_s.load())+(read_time_m.load()*60);
+            latest_velocity = read_vel_z.load();
+
+            acceleration = (latest_velocity-old_velocity)/(latest_time-old_time);
+
+        ImGui::BulletText("Acceleration \n(Vertical): (%.5f)", (latest_time));
+        ImGui::BulletText("Acceleration \n(Vertical): (%.5f)", (old_time));
+        ImGui::BulletText("Acceleration \n(Vertical): (%.5f)", (latest_time-old_time));
+
+            if (latest_time != old_time) {
+                old_velocity = latest_velocity;
+                old_time = latest_time;
+            }
+    */
+
+        ImGui::Text("\nHeading:");
+        ImGui::BulletText("Heading: %.0f Degrees", read_vel_d.load());
 
         ImGui::End();
 

@@ -171,8 +171,10 @@ public:
       m_stop = true;
     }
     m_condition.notify_all();
-    for ( std::thread &worker: m_workers )
-      worker.join();
+    for ( std::thread &worker: m_workers ){
+        worker.join();
+    }
+
   }
 
   const std::vector<std::pair<TileCoord, std::shared_ptr<Tile>>>& get_region ( ImPlotRect view, ImVec2 pixels )

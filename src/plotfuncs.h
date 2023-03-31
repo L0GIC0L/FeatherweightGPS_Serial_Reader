@@ -45,7 +45,10 @@ namespace fs = std::filesystem;
 
 #define CHECKBOX_FLAG(flags, flag) ImGui::CheckboxFlags(#flag, (unsigned int*)&flags, flag)
 
-#define TILE_SERVER   "https://a.tile.openstreetmap.org/" // the tile map server url
+#define TILE_SERVER   "https://api.maptiler.com/maps/hybrid/256/" // the tile map server url
+#define KEY "?key=ftdolZoW6U1GNT9i5G9G" // the tile download key
+//#define https://a.tile.openstreetmap.org/
+//#define KEY "";
 #define TILE_SIZE     256                                 // the expected size of tiles in pixels, e.g. 256x256px
 #define MAX_ZOOM      19                                  // the maximum zoom level provided by the server
 #define MAX_THREADS   2                                   // the maximum threads to use for downloading tiles (OSC strictly forbids more than 2)
@@ -88,7 +91,7 @@ struct TileCoord
   }
   inline std::string file() const
   {
-    return std::to_string ( y ) + ".png";
+    return std::to_string ( y ) + ".jpg";
   }
   inline std::string path() const
   {
@@ -96,7 +99,7 @@ struct TileCoord
   }
   inline std::string url() const
   {
-    return TILE_SERVER + subdir() + file();
+    return TILE_SERVER + subdir() + file() + KEY;
   }
   inline std::string label() const
   {
@@ -493,8 +496,8 @@ void Demo_Map ( TileManager& mngr, double x_coords, double y_coords, bool &clear
   ImPlotAxisFlags ax_flags = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_NoGridLines| ImPlotAxisFlags_Foreground;
   if ( ImPlot::BeginPlot ( "##Map",ImVec2 ( -1,-1 ),ImPlotFlags_Equal|ImPlotFlags_NoMouseText ) )
     {
-      ImPlot::SetupAxes ( NULL,NULL,ax_flags,ax_flags|ImPlotAxisFlags_Invert );
-      ImPlot::SetupAxesLimits ( 0,1,0,1 );
+      ImPlot::SetupAxes ( NULL, NULL,ax_flags,ax_flags|ImPlotAxisFlags_Invert );
+      ImPlot::SetupAxesLimits ( 0.27885,0.27888,0.384425,0.384375 );
 
         auto pos  = ImPlot::GetPlotPos();
       auto size = ImPlot::GetPlotSize();

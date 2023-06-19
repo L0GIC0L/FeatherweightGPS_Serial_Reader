@@ -497,7 +497,7 @@ void Demo_Map ( TileManager& mngr, double x_coords, double y_coords, bool &clear
   if ( ImPlot::BeginPlot ( "##Map",ImVec2 ( -1,-1 ),ImPlotFlags_Equal|ImPlotFlags_NoMouseText ) )
     {
       ImPlot::SetupAxes ( NULL, NULL,ax_flags,ax_flags|ImPlotAxisFlags_Invert );
-      ImPlot::SetupAxesLimits ( 0.27885,0.27888,0.384425,0.384375 );
+      ImPlot::SetupAxesLimits ( 0.20281,0.20285,0.4082,0.4088);
 
         auto pos  = ImPlot::GetPlotPos();
       auto size = ImPlot::GetPlotSize();
